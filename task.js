@@ -400,6 +400,48 @@ function generateExp(ruleMapping = randChoice([1, -1])) {
             });
         }
 
+        const blockFeedback = {
+            type: jsPsychHtmlKeyboardResponse,
+            stimulus: function() {
+                // Select trials from the most recently completed block
+                const lastBlockData = jsPsych.data.get()
+                    .filter({ task: "experiment_task" })
+                    .last(ntrials_per_block);
+
+                if (checkPoorPerform(lastBlockData)) {
+                    return `
+                    <div style="font-size: 24px; color: red;">
+                        <h2>Experiment will close</h2>
+                        <p>We have detected responses which indicate you are no longer eligible for the experiment.</p>
+                        <p>You will not continue with the rest of the experiment.</p>
+                        <br>
+                        <p>Press SPACE to exit.</p>
+                    </div>`;
+                } else {
+                    return `
+                        <div style="font-size: 24px;">
+                            <h2>Block complete</h2>
+                            <p>Take a short break.</p>
+                            <br>
+                            <p>Press SPACE to continue to the next block.</p>
+                    </div>`;
+                }
+            },
+            choices: [" "],
+            on_finish: function() {
+                const lastBlockData = jsPsych.data.get()
+                    .filter({ task: "experiment_task" })
+                    .last(ntrials_per_block);
+
+                // End experiment if failed
+                if (checkPoorPerform(lastBlockData)) {
+                    jsPsych.endExperiment("The experiment has ended due to your specific responses. Thank you.")
+                }
+            }
+        }
+
+        trials.push(blockFeedback)
+
         blocks.push(trials);
     }
 
