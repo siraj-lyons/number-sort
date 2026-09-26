@@ -287,8 +287,6 @@ blocks.forEach((blockTrials, blockIdx) => {
         });
 
         // ITI + Feedback
-
-        // TO DO: IMBED TRIAL FEEDBACK INTO ITI PANEL
         timeline.push({
             type: jsPsychHtmlKeyboardResponse,
             stimulus: function () {
@@ -312,22 +310,64 @@ blocks.forEach((blockTrials, blockIdx) => {
         });
     });
 
-    // End of block
+    // End of block --- COMMENTING OUT TO TEST NEW PROC TO PRESENT PERFORMANCE FEEDBACK
+    //timeline.push({
+    //    type: jsPsychHtmlKeyboardResponse,
+    //    stimulus: 
+    //        blockIdx < blocks.length - 1
+    //        ? `<p>You just completed a block of trials. You may take a moment to rest.</p>
+    //            <p>Press SPACE when you are ready to continue.</p>`
+    //        : `<p>You have completed all blocks. Press SPACE for further instructions.</p>`,
+    //    choices: [ " " ],
+    //});
+
+    // End of block (with performance feedback for possible exclusion from study)
     timeline.push({
         type: jsPsychHtmlKeyboardResponse,
-        stimulus: 
-            blockIdx < blocks.length - 1
-            ? `<p>You just completed a block of trials. You may take a moment to rest.</p>
-                <p>Press SPACE when you are ready to continue.</p>`
-            : `<p>You have completed all blocks. Press SPACE for further instructions.</p>`,
-        choices: [ " " ],
+        stimulus: function() {
+            // Get data from the most recent block of trials
+            const lastBlockData = jsPsych.data.get().filter({
+                task: "cued_task_switch",
+                block: blockIdx + 1
+            });
+
+            // Checking if participants met exclusion criteria
+            if checkPoorPerform(lastBlockData)) {
+                return `
+                    <div style="font-size: 24px; color: red;"
+                        <h2>End of experiment</h2>
+                        <p>We are ending the experiment based on your responses on the previous block.</p>
+                        <br>
+                        <p>Press SPACE to exit.</p>
+                    </div>`;
+            }
+            // Let participant continue if performance was good
+            if (blockIdx < blocks.length - 1) {
+                return `<p>You just completed a block of trials. You may take a moment to rest.</p>
+                        <p>Press SPACE when you are ready to continue.</p>`;
+            } else {
+                return `<p>You have completed all blocks. Press SPACE for further instructions.</p>`
+            }
+        },
+        choices: [" "],
+        on_finish: function() {
+            // Collect data
+            const lastBlockData = jsPsych.data.get().filter({
+                task: "cued_task_switch",
+                block: blockIdx + 1
+            });
+
+            if (checkPoorPerform(lastBlockData)) {
+                jsPsych.endExperiment("The experiment is ending due to your responses.")
+            }
+        }
     });
 });
 
 // TO DO:
 //      Build a redirect system to take participants back to SONA after the completion of the study
 
-// End
+// End the experiement for good performers
 timeline.push({
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `<p>This is the end of the task. This was first part of the experiment. 
