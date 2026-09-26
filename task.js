@@ -28,6 +28,18 @@
 //
 // More detailed representation of task methodology is presented here: https://doi.org/10.3758/s13423-025-02712-7
 //
+// Experiment includes checks on performance to selectively exclude participants. 
+// Performance criteria for exclusion:
+//      -Stereotyped responding. Example: "A A A A A A A A A A A A A"
+//      -Serial switching. Example: "A L A L A L A L A L A L A L A L"
+//      -Rapid responding. Example: Mean reaction time < 200
+//      -Disengaged respond. Example: Missing responses > 40% of the time
+//      -Inability to learn task rules: Example: Failing practice block 4 times. 
+//
+// Performance feedback will be given at the end of the block.
+// If participants meet 1+ of these conditions, they will be notified of exclusion. 
+// This is to preserve financial credits + data quality
+//
 // Author: Siraj J. Lyons, MSc
 // Date: 8/12/2026
 // Implemented on Pavlovia using jsPsych
@@ -38,13 +50,7 @@
 //          Constant response below 200 ms
 //          Serial button presses
 //          Alternating button presses (A - L - A - L)
-// 
-// MESSAGE TO DISPLAY
-//      We detected a lack of task engagement. 
-//      We are terminating this experiment.
-//      You will not receive course credit.
-//      You will not be eligible to win the $100 gift card.
-//      Thank you.
+
 
 
 // Organize practice task structure
@@ -203,6 +209,42 @@ function generatePrac(ruleMapping) {
     }
     return trials;
 }
+
+function checkPoorPerform(blockData) {
+    const nTrials = blockData.count();
+    if (nTrials === 0) return false;
+
+    const responses = blockData.select('responses').values;
+    const rts = blockData.select('rt').values;
+
+    // Check if participant is missing too many responses (inattentiveness or AFK)
+    const missedTrialsCount = responses.filter(r => r === null || r === undefined).length;
+    if ((missedTrialsCount / nTrials) >= 0.40) return true; // 40% trials can be missed -- liberal threshold to miminize false positive
+
+    // Check if participant is spamming buttons
+    const validRTs = rts.filter(rt => rt !== null);
+    if (validRTs.length > 0) {
+        const meanRT = validRTs.reduce((sum,val) => sum + val, 0) / validRTs.length;
+        if (meanRT < 200) return true; // assuming 200 RT average is min-norm -- liberal threshold to minimize false positive
+    }
+    // Check if participant is serial-alternating responses
+    const validResponses = responses.filter(r => r !== null);
+    if (validResposnes.length > 10) {
+        let keySwitches = 0;
+        for (let i = 1; i < validResponses.length; i++) {
+            if (validResponses[i] !== validResponses[i-1]) keySwitches++;
+        }
+
+        const switchRate = keySwitches / (validResponses.length - 1);
+
+        // If the switch rate is at or less than 5%, participant is likely selecting the same key over and over again
+        // If the switch rate is at or above 95%, participant is likely alternating key response
+        if (switchRate <= 0.05 || switchRate >= 0.95) return true;
+    }
+
+    return false; // participant does not met criterial for bad performance. they can continue to next block
+}
+
 
 // Constructing practice trial loop
 function buildPractice(practiceTrialData) {
