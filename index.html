@@ -210,8 +210,13 @@ function buildStimulusHTML(trialData) {
         </div>`;
 }
 
-// Start block
-blocks.forEach((blockTrials, blockIdx) => {
+// Fatigue effects are expected, shuffle block presentation to mitigate bias
+const shuffledBlocks = jsPsych.randomization.shuffle(blocks);
+
+shuffledBlocks.forEach((blockTrials, blockIdx) => {
+
+    // Identify current block ID
+    const currentBlockID = blockTrials[0].block;
 
     timeline.push({
         type: jsPsychHtmlKeyboardResponse,
@@ -328,13 +333,13 @@ blocks.forEach((blockTrials, blockIdx) => {
             // Get data from the most recent block of trials
             const lastBlockData = jsPsych.data.get().filter({
                 task: "cued_task_switch",
-                block: blockIdx + 1
+                block: currentBlockID
             });
 
             // Checking if participants met exclusion criteria
             if checkPoorPerform(lastBlockData)) {
                 return `
-                    <div style="font-size: 24px; color: red;"
+                    <div style="font-size: 24px; color: red;">
                         <h2>End of experiment</h2>
                         <p>We are ending the experiment based on your responses on the previous block.</p>
                         <br>
@@ -354,7 +359,7 @@ blocks.forEach((blockTrials, blockIdx) => {
             // Collect data
             const lastBlockData = jsPsych.data.get().filter({
                 task: "cued_task_switch",
-                block: blockIdx + 1
+                block: currentBlockID
             });
 
             if (checkPoorPerform(lastBlockData)) {
