@@ -62,8 +62,14 @@ const practiceAccCutoff = 75; // People must obtain 75% accuracy in practice to 
 // Organize task structure - Modify to your demands, or reduce for testing purposes -- CURRENTLY AT 5 TRIALS PER BLOCK FOR TESTING DATA STORAGE SUCCESS
 const nblocks = 4;
 const ntrials_per_block = 5;
-const switch_prob = [0.75, 0.75, 0.25, 0.25]; 
-const incon_prob = [0.25, 0.75, 0.25, 0.75]; 
+
+// Create block dictionary 
+const blockDef = [
+    { blockNum: 1, switch_prob: 0.75, incon_prob: 0.25 },
+    { blockNum: 2, switch_prob: 0.75, incon_prob: 0.75 },
+    { blockNum: 3, switch_prob: 0.25, incon_prob: 0.25 },
+    { blockNum: 4, switch_prob: 0.25, incon_prob: 0.75}
+];
 
 // Combination of switch_prob and incon_prob forms the 4-condition grid
 // A = 75% switch, 25% incon
@@ -360,7 +366,7 @@ function createPracticeLoop(practiceTrialData) {
 function generateExp(ruleMapping = randChoice([1, -1])) {
     const blocks = [];
 
-    for (let b = 0; b < nblocks; b++) {
+    blockDef.forEach(config => {
         const trials = [];
 
         // Trial 1 random  rule + congruency
@@ -369,40 +375,44 @@ function generateExp(ruleMapping = randChoice([1, -1])) {
         let stim = randChoice(congruency == "Con" ? con_stim : incon_stim);
 
         trials.push({
-            block: b + 1,
-            trial: 1,
-            rule,
-            cue_color: rule_color[rule],
-            congruency,
-            switch_type: "NA", // switch impossible due to first trial of block
-            stimulus: stim,
-            correct_response: correctResponse(rule, stim, ruleMapping),
+            data: {
+                task: "cued_task_switch",
+                block: config.blockNum,
+                trial: 1,
+                rule,
+                cue_color: rue_color[rule],
+                congruency,
+                switch_type: "NA",
+                stimulus: stim,
+                correct_response: correctResponse(rule, stim, ruleMapping),
+            }
         });
 
         // Trial 2 and onward
         for (let t = 2; t <= ntrials_per_block; t++) {
-            const isSwitch = randBool(switch_prob[b]);
+            const isSwitch = randBool(config.switch_prob);
             rule = isSwitch ? flipRule(rule) : rule;
 
-            const isIncongruent = randBool(incon_prob[b]);
+            const isIncongruent = randBool(config.incon_prob);
             congruency = isIncongruent ? "Incon" : "Con";
             stim = randChoice(isIncongruent ? incon_stim : con_stim);
 
             trials.push({
-                block: b + 1,
-                trial: t,
-                rule,
-                cue_color: rule_color[rule],
-                congruency,
-                switch_type: isSwitch ? "switch" : "repeat",
-                stimulus: stim,
-                correct_response: correctResponse(rule, stim, ruleMapping),
+                data: {
+                    task: "cued_task_switch",
+                    block: config.blockNum,
+                    trial: t,
+                    rule,
+                    cue_color: rule_color[rule],
+                    congruency,
+                    switch_type: isSwitch ? "switch" : "repeat",
+                    stimulus: stim,
+                    correct_response: correctResponse(rule, stim, ruleMapping)
+                }
             });
         }
-
         blocks.push(trials);
-    }
-
+    });
     return { ruleMapping, blocks };
 }
 
