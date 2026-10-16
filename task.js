@@ -25,43 +25,41 @@
 //      - Low switch, high incongruency
 //      - High switch, low incongruency
 //      - High switch, high incongruency
+// 
+// Each block will have 128 trials. 
 //
-// More detailed representation of task methodology is presented here: https://doi.org/10.3758/s13423-025-02712-7
+// More detailed representation of task methodology is presented in the source publication: https://doi.org/10.3758/s13423-025-02712-7
 //
-// Experiment includes checks on performance to selectively exclude participants. 
+// This implementation of the experiment includes checks on performance to selectively exclude participants. 
 // Performance criteria for exclusion:
 //      -Stereotyped responding. Example: "A A A A A A A A A A A A A"
 //      -Serial switching. Example: "A L A L A L A L A L A L A L A L"
 //      -Rapid responding. Example: Mean reaction time < 200
-//      -Disengaged respond. Example: Missing responses > 40% of the time
+//      -Disengaged responding. Example: Missing responses > 40% of the time
 //      -Inability to learn task rules: Example: Failing practice block 4 times. 
 //
 // Performance feedback will be given at the end of the block.
-// If participants meet 1+ of these conditions, they will be notified of exclusion. 
+// If participants meet 1+ of these conditions, they will be notified of exclusion.
 // This is to preserve financial credits + data quality
 //
 // Author: Siraj J. Lyons, MSc
 // Date: 8/12/2026
 // Implemented on Pavlovia using jsPsych
 
-//=================================
-// TO DO
-//      - Add detection of button spamming
-//          Constant response below 200 ms
-//          Serial button presses
-//          Alternating button presses (A - L - A - L)
-
-
+//---- BEGIN
 
 // Organize practice task structure
 const npracTrials = 20; // People will complete 20 trials for practice, 10 Magnitude and 10 Parity
 const practiceAccCutoff = 75; // People must obtain 75% accuracy in practice to continue to task
 
+// TO DO:
+//   - Consider increasing practice accuracy threshold to 80%
 
 
-// Organize task structure - Modify to your demands, or reduce for testing purposes -- CURRENTLY AT 5 TRIALS PER BLOCK FOR TESTING DATA STORAGE SUCCESS
+// Organize task structure - Modify to your demands, or reduce for testing purposes
+// CURRENTLY AT 10 TRIALS PER BLOCK FOR PILOTING
 const nblocks = 4;
-const ntrials_per_block = 5;
+const ntrials_per_block = 10;
 
 // Create block dictionary 
 const blockDef = [
@@ -71,11 +69,12 @@ const blockDef = [
     { blockNum: 4, switch_prob: 0.25, incon_prob: 0.75}
 ];
 
+// Dictionary Key: 
 // Combination of switch_prob and incon_prob forms the 4-condition grid
-// A = 75% switch, 25% incon
-// B = 75% switch, 75% incon
-// C = 25% switch, 25% incon
-// D = 25% switch, 75% incon 
+// 1 = 75% switch, 25% incon
+// 2 = 75% switch, 75% incon
+// 3 = 25% switch, 25% incon
+// 4 = 25% switch, 75% incon 
 
 const con_stim = [2, 4, 7, 9];
 const incon_stim = [1, 3, 6, 8];
@@ -223,9 +222,9 @@ function checkPoorPerform(blockData) {
     const responses = blockData.select('responses').values;
     const rts = blockData.select('rt').values;
 
-    // Check if participant is missing too many responses (inattentiveness or AFK)
+    // Check if participant is missing too many responses (inattentiveness or absent from keyboard)
     const missedTrialsCount = responses.filter(r => r === null || r === undefined).length;
-    if ((missedTrialsCount / nTrials) >= 0.40) return true; // 40% trials can be missed -- liberal threshold to miminize false positive
+    if ((missedTrialsCount / nTrials) >= 0.40) return true; // 40% trials can be missed. liberal threshold to miminize false positive
 
     // Check if participant is spamming buttons
     const validRTs = rts.filter(rt => rt !== null);
