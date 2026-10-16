@@ -374,17 +374,17 @@ function generateExp(ruleMapping = randChoice([1, -1])) {
         let stim = randChoice(congruency == "Con" ? con_stim : incon_stim);
 
         trials.push({
-            data: {
+            //data: { // REMOVING DATA STRUCTURE TO TEST ERROR (? for Numeric stim)
                 task: "cued_task_switch",
                 block: config.blockNum,
                 trial: 1,
                 rule,
                 cue_color: rule_color[rule],
-                congruency,
+                congruency: congruency,
                 switch_type: "NA",
                 stimulus: stim,
                 correct_response: correctResponse(rule, stim, ruleMapping),
-            }
+            //} // REMOVING DATA STRUCTURE TO TEST ERROR (? for Numeric stim)
         });
 
         // Trial 2 and onward
@@ -397,17 +397,17 @@ function generateExp(ruleMapping = randChoice([1, -1])) {
             stim = randChoice(isIncongruent ? incon_stim : con_stim);
 
             trials.push({
-                data: {
+                //data: { // REMOVING TO TEST ERROR (? for Numeric stim)
                     task: "cued_task_switch",
                     block: config.blockNum,
                     trial: t,
                     rule,
                     cue_color: rule_color[rule],
-                    congruency,
+                    congruency: congruency,
                     switch_type: isSwitch ? "switch" : "repeat",
                     stimulus: stim,
                     correct_response: correctResponse(rule, stim, ruleMapping)
-                }
+                //} // REMOVING TO TEST ERROR (? for Numeric stim)
             });
         }
         blocks.push(trials);
