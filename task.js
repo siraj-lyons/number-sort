@@ -379,7 +379,7 @@ function generateExp(ruleMapping = randChoice([1, -1])) {
                 block: config.blockNum,
                 trial: 1,
                 rule,
-                cue_color: rue_color[rule],
+                cue_color: rule_color[rule],
                 congruency,
                 switch_type: "NA",
                 stimulus: stim,
