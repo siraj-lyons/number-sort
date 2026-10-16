@@ -234,7 +234,7 @@ function checkPoorPerform(blockData) {
     }
     // Check if participant is serial-alternating responses
     const validResponses = responses.filter(r => r !== null);
-    if (validResposnes.length > 10) {
+    if (validResponses.length > 10) {
         let keySwitches = 0;
         for (let i = 1; i < validResponses.length; i++) {
             if (validResponses[i] !== validResponses[i-1]) keySwitches++;
