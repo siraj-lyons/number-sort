@@ -341,7 +341,7 @@ shuffledBlocks.forEach((blockTrials, blockIdx) => {
                 return `
                     <div style="font-size: 24px; color: red;">
                         <h2>End of experiment</h2>
-                        <p>We are ending the experiment based on your responses on the previous block.</p>
+                        <p>You are not eligible for participating in this experiment.</p>
                         <br>
                         <p>Press SPACE to exit.</p>
                     </div>`;
@@ -372,42 +372,62 @@ shuffledBlocks.forEach((blockTrials, blockIdx) => {
 // TO DO:
 //      Build a redirect system to take participants back to SONA after the completion of the study
 
-// End the experiement for good performers
-timeline.push({
+// If participant is eligible to earn credit, provide ending debrief
+timeline.psuh({
     type: jsPsychHtmlKeyboardResponse,
-    stimulus: `<p>This is the end of the task. This was first part of the experiment. 
-        Please check your email in 24 hours to complete the second part. You must complete
-        the second part within 3 days (72 hours). As a reminder, you must complete both 
-        parts to receive course credit AND to be eligible for the $100 lottery.</p>`,
-    command: "finish",
-    on_finish: function() {
-        jsPsych.data.get().localSave('csv','/Users/nilcamp2/Library/CloudStorage/Box-Box/NILCAMP/Studies/Cognitive Architecture/Task/mydata.csv')
-    }
+    stimulus: `
+        <h2>Experiment Complete</h2>
+        <p>This is the end of the experiment.</p>
+        <p>Press the <strong>SPACE BAR</strong> to save your data so you can earn your credit</p> 
+    `,
+    choices: [" "]
 });
 
+// Exit fullscreen mode
 timeline.push({
     type: jsPsychFullscreen,
     fullscreen_mode: false,
-});
+})
 
-
+// --- Chunk below edited out on 10-16-2026. Likely produces redundancy error interfering with data saving on Palovia
 // For when the task is run on Pavlovia
-if (RUN_ON_PAVLOVIA) {
-    timeline.push({
-        type: jsPsychPavlovia,
-        command: "finish",
-    })
-}
+//if (RUN_ON_PAVLOVIA) {
+//    timeline.push({
+//        type: jsPsychPavlovia,
+//        command: "finish",
+//    })
+//}
 
 // Save data on Pavlovia
-var pavlovia_finish = {
-    type: "pavlovia",
-    command: "finish",
-    on_finish: function() {
-        document.body.innerHTML = '<p> Please wait. You will be redirected back to SONA in a few moments. If you get a pop up warning you "data may not be saved", you can click "leave". Your data has already been saved.</p>'
-    }
-}; 
-timeline.push(pavlovia_finish);
+//var pavlovia_finish = {
+//    type: "pavlovia",
+//    command: "finish",
+//    on_finish: function() {
+//        document.body.innerHTML = '<p> Please wait. You will be redirected back to SONA in a few moments. If you get a pop up warning you "data may not be saved", you can click "leave". Your data has already been saved.</p>'
+//    }
+//}; 
+//timeline.push(pavlovia_finish);
+
+// Saving on Pavlovia (implemented on 10-16-2026)
+if (RUN_ON_PAVLOVIA) {
+    var palovia_finish = {
+        type: jsPsychPavlovia,
+        command: "finish",
+        on_finish: function() {
+            // Inform participant of experiment end
+            document.body.innerHTML = '<div style="display: flex; justify-content: center; align-items: center; height: 100vh; text-align: center;"><p>Please wait. You will be redirected back to SONA in a few moments.<br><br>If you get a browser pop-up warning that "data may not be saved," you can safely click "Leave". Your data has already been saved.</p></div>';
+        }
+    };
+    timeline.push(pavlovia_finish);
+} else {
+    // Testing locally, save the data to local storage (Downloads)
+    timeline.push({
+        type: jsPsychCallFunction,
+        func: function() {
+            jsPsych.data.get().localsave().localSave('csv','local_test_data.csv')
+        }
+    });
+}
 
 jsPsych.run(timeline);
 
