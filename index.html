@@ -103,24 +103,32 @@ const jsPsych = initJsPsych({
     }
 });
 
+//const sona_subjID = jsPsych.data.getURLVariable('id');
+//jsPsych.data.addProperties({
+//    participantID: sona_subjID
+//});
+
 const timeline = [];
 
 // Organize participant information
 // This is an online task and the participant ID will be produced by %SURVEY_CODE% in SONA
 // $SURVEY_CODE% will be passed to participantID and to external survey software (REDcap)
+// THIS IS THE REDIRECT LINK: https://louisville.sona-systems.com/webstudy_credit.aspx?experiment_id=453&credit_token=62a83904fb784bf5a92de3bae0741a11&survey_code=XXXX
 
 //===============
 // TO DO:
 //      Verify that the participant ID parameter is being handled appropriately. 
 //===============
+// Below is the redirect link for SONA
+const SONA_link = 'https://louisville.sona-systems.com/webstudy_credit.aspx?experiment_id=453&credit_token=62a83904fb784bf5a92de3bae0741a11&survey_code=XXXX' 
+
 const urlParams = new URLSearchParams(window.location.search);
-let participantID = urlParams.get("participant");
+let participantID = urlParams.get("survey_code");
 let sessionNum = urlParams.get("session");
 let dayNum = urlParams.get("day");
 
-if (participantID) jsPsych.data.addProperties({ participant: participantID})
-if (sessionNum) jsPsych.data.addProperties({ session: sessionNum});
-if (dayNum) jsPsych.data.addProperties({ day: dayNum });
+// Create redirect link for participant. Upon completion of study, this will automatically grant them SONA credit
+var finishURL = SONA_link + subjID
 
 // Initialize Pavlovia session
 if (RUN_ON_PAVLOVIA) {
@@ -413,9 +421,13 @@ if (RUN_ON_PAVLOVIA) {
     var palovia_finish = {
         type: jsPsychPavlovia,
         command: "finish",
+        participantID: subjID
         on_finish: function() {
             // Inform participant of experiment end
             document.body.innerHTML = '<div style="display: flex; justify-content: center; align-items: center; height: 100vh; text-align: center;"><p>Please wait. You will be redirected back to SONA in a few moments.<br><br>If you get a browser pop-up warning that "data may not be saved," you can safely click "Leave". Your data has already been saved.</p></div>';
+        },
+        completedCallback: function() {
+            window.location.replace(finishURL)
         }
     };
     timeline.push(pavlovia_finish);
